@@ -91,4 +91,24 @@ const generateImage = async (req, res) => {
     }
 };
 
-export { generateImage };
+const getAllImages = async (req, res) => {
+    try {
+        const images = await imageModel.find()
+            .populate('userId', 'name')
+            .sort({ createdAt: -1 })
+            .limit(12);
+
+        res.json({
+            success: true,
+            images,
+        });
+    } catch (error) {
+        console.log("Fetch images error:", error.message || error);
+        res.json({
+            success: false,
+            message: "Failed to fetch images",
+        });
+    }
+};
+
+export { generateImage, getAllImages };

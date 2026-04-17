@@ -2,6 +2,8 @@ import React, { useContext } from "react";
 import Home from "./pages/Home";
 import Result from "./pages/Result";
 import BuyCredit from "./pages/BuyCredit";
+import Features from "./pages/Features";
+import Showcase from "./pages/Showcase";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -21,6 +23,8 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/result" element={<Result />} />
         <Route path="/buy" element={<BuyCredit />} />
+        <Route path="/features" element={<Features />} />
+        <Route path="/showcase" element={<Showcase />} />
       </Routes>
       <Footer />
     </div>
