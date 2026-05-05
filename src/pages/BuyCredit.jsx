@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { assets, plans } from "../assets/assets";
 import { AppContext } from "../context/AppContext";
 import { motion } from "framer-motion";
@@ -32,6 +32,11 @@ const planPerks = {
 const BuyCredit = () => {
   const { user, backendUrl, token, setShowLogin, loadCreditsData } = useContext(AppContext);
   const navigate = useNavigate();
+
+  const [showFakeModal, setShowFakeModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [upiId, setUpiId] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   const initPay = async (order) => {
     const options = {
@@ -72,19 +77,28 @@ const BuyCredit = () => {
         setShowLogin(true);
         return;
       }
-      const { data } = await axios.post(
-        backendUrl + "/api/user/pay-razor",
-        { planId },
-        { headers: { token } }
-      );
-      if (data.success) {
-        initPay(data.order);
-      } else {
-        toast.error(data.message)
-      }
+      // FAKE PAYMENT FLOW
+      setSelectedPlan(planId);
+      setShowFakeModal(true);
     } catch (error) {
        toast.error(error.message);
     }
+  };
+
+  const handleFakePayment = () => {
+    if (!upiId || !phoneNumber) {
+      toast.error("Please enter both UPI ID and Phone Number");
+      return;
+    }
+    
+    toast.success("Payment Successful!");
+    setShowFakeModal(false);
+    setUpiId('');
+    setPhoneNumber('');
+    
+    setTimeout(() => {
+      navigate("/");
+    }, 1500);
   };
 
   const containerVariants = {
@@ -201,6 +215,79 @@ const BuyCredit = () => {
           );
         })}
       </motion.div>
+
+      {/* Fake Razorpay Modal */}
+      {showFakeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden"
+          >
+            {/* Header */}
+            <div className="bg-[#0B3453] p-6 text-white text-left">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-xl tracking-wide">Razorpay</h3>
+                  <p className="text-gray-300 text-sm mt-1">DreamCanvas - {selectedPlan} Plan</p>
+                </div>
+                <div className="text-right">
+                   <div className="text-xs text-gray-300">Amount to Pay</div>
+                   <div className="font-bold text-xl">${plans.find(p => p.id === selectedPlan)?.price || 0}</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Body */}
+            <div className="p-6 text-left">
+              <h4 className="font-semibold text-gray-800 mb-4 text-lg">Pay with UPI</h4>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <input 
+                    type="text" 
+                    placeholder="+91 9876543210"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">UPI ID</label>
+                  <input 
+                    type="text" 
+                    placeholder="username@upi"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-8">
+                 <button 
+                   onClick={handleFakePayment}
+                   className="w-full bg-[#18558A] hover:bg-[#0B3453] text-white font-bold py-3 rounded-lg shadow-md transition"
+                 >
+                   Pay ${plans.find(p => p.id === selectedPlan)?.price || 0}
+                 </button>
+                 <button 
+                   onClick={() => setShowFakeModal(false)}
+                   className="w-full mt-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-lg transition"
+                 >
+                   Cancel
+                 </button>
+              </div>
+              
+              <div className="mt-6 flex items-center justify-center gap-1 text-gray-400 text-xs">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"></path></svg>
+                Secured by Razorpay
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 };
